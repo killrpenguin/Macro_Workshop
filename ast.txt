@@ -1,0 +1,297 @@
+Type::Path {
+    qself: None,
+    path: Path {
+        leading_colon: None,
+        segments: [
+            PathSegment {
+                ident: Ident {
+                    ident: "String",
+                    span: #0 bytes(226..232),
+                },
+                arguments: PathArguments::None,
+            },
+        ],
+    },
+}
+Type::Path {
+    qself: None,
+    path: Path {
+        leading_colon: None,
+        segments: [
+            PathSegment {
+                ident: Ident {
+                    ident: "Vec",
+                    span: #0 bytes(244..247),
+                },
+                arguments: PathArguments::AngleBracketed {
+                    colon2_token: None,
+                    lt_token: Lt,
+                    args: [
+                        GenericArgument::Type(
+                            Type::Path {
+                                qself: None,
+                                path: Path {
+                                    leading_colon: None,
+                                    segments: [
+                                        PathSegment {
+                                            ident: Ident {
+                                                ident: "String",
+                                                span: #0 bytes(248..254),
+                                            },
+                                            arguments: PathArguments::None,
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                    ],
+                    gt_token: Gt,
+                },
+            },
+        ],
+    },
+}
+Type::Path {
+    qself: None,
+    path: Path {
+        leading_colon: None,
+        segments: [
+            PathSegment {
+                ident: Ident {
+                    ident: "Vec",
+                    span: #0 bytes(266..269),
+                },
+                arguments: PathArguments::AngleBracketed {
+                    colon2_token: None,
+                    lt_token: Lt,
+                    args: [
+                        GenericArgument::Type(
+                            Type::Path {
+                                qself: None,
+                                path: Path {
+                                    leading_colon: None,
+                                    segments: [
+                                        PathSegment {
+                                            ident: Ident {
+                                                ident: "String",
+                                                span: #0 bytes(270..276),
+                                            },
+                                            arguments: PathArguments::None,
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                    ],
+                    gt_token: Gt,
+                },
+            },
+        ],
+    },
+}
+Type::Path {
+    qself: None,
+    path: Path {
+        leading_colon: None,
+        segments: [
+            PathSegment {
+                ident: Ident {
+                    ident: "String",
+                    span: #0 bytes(296..302),
+                },
+                arguments: PathArguments::None,
+            },
+        ],
+    },
+}
+DeriveInput {
+    attrs: [],
+    vis: Visibility::Public(
+        Pub,
+    ),
+    ident: Ident {
+        ident: "Command",
+        span: #0 bytes(200..207),
+    },
+    generics: Generics {
+        lt_token: None,
+        params: [],
+        gt_token: None,
+        where_clause: None,
+    },
+    data: Data::Struct {
+        struct_token: Struct,
+        fields: Fields::Named {
+            brace_token: Brace,
+            named: [
+                Field {
+                    attrs: [],
+                    vis: Visibility::Inherited,
+                    mutability: FieldMutability::None,
+                    ident: Some(
+                        Ident {
+                            ident: "executable",
+                            span: #0 bytes(214..224),
+                        },
+                    ),
+                    colon_token: Some(
+                        Colon,
+                    ),
+                    ty: Type::Path {
+                        qself: None,
+                        path: Path {
+                            leading_colon: None,
+                            segments: [
+                                PathSegment {
+                                    ident: Ident {
+                                        ident: "String",
+                                        span: #0 bytes(226..232),
+                                    },
+                                    arguments: PathArguments::None,
+                                },
+                            ],
+                        },
+                    },
+                },
+                Comma,
+                Field {
+                    attrs: [],
+                    vis: Visibility::Inherited,
+                    mutability: FieldMutability::None,
+                    ident: Some(
+                        Ident {
+                            ident: "args",
+                            span: #0 bytes(238..242),
+                        },
+                    ),
+                    colon_token: Some(
+                        Colon,
+                    ),
+                    ty: Type::Path {
+                        qself: None,
+                        path: Path {
+                            leading_colon: None,
+                            segments: [
+                                PathSegment {
+                                    ident: Ident {
+                                        ident: "Vec",
+                                        span: #0 bytes(244..247),
+                                    },
+                                    arguments: PathArguments::AngleBracketed {
+                                        colon2_token: None,
+                                        lt_token: Lt,
+                                        args: [
+                                            GenericArgument::Type(
+                                                Type::Path {
+                                                    qself: None,
+                                                    path: Path {
+                                                        leading_colon: None,
+                                                        segments: [
+                                                            PathSegment {
+                                                                ident: Ident {
+                                                                    ident: "String",
+                                                                    span: #0 bytes(248..254),
+                                                                },
+                                                                arguments: PathArguments::None,
+                                                            },
+                                                        ],
+                                                    },
+                                                },
+                                            ),
+                                        ],
+                                        gt_token: Gt,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+                Comma,
+                Field {
+                    attrs: [],
+                    vis: Visibility::Inherited,
+                    mutability: FieldMutability::None,
+                    ident: Some(
+                        Ident {
+                            ident: "env",
+                            span: #0 bytes(261..264),
+                        },
+                    ),
+                    colon_token: Some(
+                        Colon,
+                    ),
+                    ty: Type::Path {
+                        qself: None,
+                        path: Path {
+                            leading_colon: None,
+                            segments: [
+                                PathSegment {
+                                    ident: Ident {
+                                        ident: "Vec",
+                                        span: #0 bytes(266..269),
+                                    },
+                                    arguments: PathArguments::AngleBracketed {
+                                        colon2_token: None,
+                                        lt_token: Lt,
+                                        args: [
+                                            GenericArgument::Type(
+                                                Type::Path {
+                                                    qself: None,
+                                                    path: Path {
+                                                        leading_colon: None,
+                                                        segments: [
+                                                            PathSegment {
+                                                                ident: Ident {
+                                                                    ident: "String",
+                                                                    span: #0 bytes(270..276),
+                                                                },
+                                                                arguments: PathArguments::None,
+                                                            },
+                                                        ],
+                                                    },
+                                                },
+                                            ),
+                                        ],
+                                        gt_token: Gt,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+                Comma,
+                Field {
+                    attrs: [],
+                    vis: Visibility::Inherited,
+                    mutability: FieldMutability::None,
+                    ident: Some(
+                        Ident {
+                            ident: "current_dir",
+                            span: #0 bytes(283..294),
+                        },
+                    ),
+                    colon_token: Some(
+                        Colon,
+                    ),
+                    ty: Type::Path {
+                        qself: None,
+                        path: Path {
+                            leading_colon: None,
+                            segments: [
+                                PathSegment {
+                                    ident: Ident {
+                                        ident: "String",
+                                        span: #0 bytes(296..302),
+                                    },
+                                    arguments: PathArguments::None,
+                                },
+                            ],
+                        },
+                    },
+                },
+                Comma,
+            ],
+        },
+        semi_token: None,
+    },
+}
