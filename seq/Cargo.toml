@@ -13,7 +13,11 @@ name = "tests"
 path = "tests/progress.rs"
 
 [dev-dependencies]
-trybuild = { version = "1.0.49", features = ["diff"] }
+trybuild = { version = "*", features = ["diff"] }
 
 [dependencies]
-# TODO
+syn = { version = "*", features = ["extra-traits", "full"] }
+quote = "*"
+proc-macro2 = "*"
+cargo = "0.80.0"
+expand = "0.3.0"

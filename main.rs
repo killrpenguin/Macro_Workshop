@@ -6,18 +6,14 @@
 // To run the code:
 //     $ cargo run
 
-use derive_builder::Builder;
+use seq::seq;
 
-#[derive(Builder)]
-pub struct Command {
-    executable: String,
-    #[builder(each = "arg")]
-    args: Vec<String>,
-    #[builder(each = "env")]
-    env: Vec<String>,
-    current_dir: Option<String>,
-}
-    
-fn main() {
-    
-}
+seq!(N in 0..4 {
+    compile_error!(concat!("error number ", stringify!(N)));
+});
+
+fn main() {}
+
+
+
+
