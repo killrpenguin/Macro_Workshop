@@ -72,50 +72,41 @@ impl visit_mut::VisitMut for LexicographicMatch {
             node.attrs.retain(|expr| !expr.path().is_ident("sorted"));
             let mut variant_names: Vec<String> = Vec::with_capacity(node.attrs.len());
             for arm in node.arms.iter() {
-                let ident = get_arm_ident(&arm.pat).expect("Failed to get arm name in VisitMut.");
-                let name = ident.to_string();
+                let name = get_arm_name(&arm.pat).expect("Failed to get arm name in VisitMut.");
                 if variant_names
                     .last()
-                    .map(|last_item| &ident.to_string() < last_item)
+                    .map(|last_item| &name.0 < last_item)
                     .unwrap_or(false)
                 {
                     let should_be = variant_names
-                        .binary_search(&name)
+                        .binary_search(&name.0)
                         .expect_err("Failed to find binary search value in visit_expr_match_mut.");
                     self.errors.push(syn::Error::new(
-                        ident.span(),
-                        format!("{} should sort before {}", name, variant_names[should_be]),
+                        name.1,
+                        format!("{} should sort before {}", name.0, variant_names[should_be]),
                     ));
                 }
-                variant_names.push(name);
+                variant_names.push(name.0);
             }
         }
         visit_mut::visit_expr_match_mut(self, node);
     }
 }
 
-fn get_arm_ident<'a>(arm: &'a syn::Pat) -> syn::Result<&'a syn::Ident> {
+fn get_arm_name(arm: &syn::Pat) -> Option<(String, Span)> {
     match arm {
         syn::Pat::Ident(syn::PatIdent {
             subpat: Some((_, ref sp)),
             ..
-        }) => get_arm_ident(sp),
+        }) => get_arm_name(sp),
         syn::Pat::Struct(pat_struct) => {
-            let ident = pat_struct
-                .path
-                .get_ident()
-                .expect("Failed to get ident from pattern in get_arm_ident.");
-            Ok(ident)
+            let ident = pat_struct.path.get_ident().expect("");
+            Some((ident.to_string(), ident.span()))
         }
         syn::Pat::TupleStruct(pat_tpl_struct) => {
             let ident = pat_tpl_struct.path.get_ident().expect("");
-            Ok(ident)
+            Some((ident.to_string(), ident.span()))
         }
-        _ => {
-            return Err(syn::Error::new(
-                Span::call_site(),
-                "Failed to find ident in arm pattern.",
-            ))
-        }
+        _ => None,
     }
 }

@@ -65,7 +65,6 @@
 //
 //   - The ExprMatch struct:
 //     https://docs.rs/syn/2.0/syn/struct.ExprMatch.html
-
 use sorted::sorted;
 
 use std::fmt::{self, Display};
