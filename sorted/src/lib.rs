@@ -1,5 +1,4 @@
 extern crate proc_macro;
-//use proc_macro2::TokenStream as TokenStream2;
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -19,25 +18,17 @@ pub fn sorted(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 fn sorted_impl<T, E>(input: &syn::Item) -> syn::Result<()> {
     match input {
-        syn::Item::Enum(is_enum) => {
-            if !is_enum.variants.is_empty() {
-                let mut sorted: Vec<String> = Vec::with_capacity(is_enum.variants.len());
-                for variant in is_enum.variants.iter() {
-                    let name = variant.ident.to_string();
-                    if sorted
-                        .last()
-                        .map(|last_item| &name < last_item)
-                        .unwrap_or(false)
-                    {
-                        let should_be = sorted
-                            .binary_search(&name)
-                            .expect_err("Failed to find binary search value in sorted impl.");
-                        return Err(syn::Error::new(
-                            variant.ident.span(),
-                            format!("{} should sort before {}", name, sorted[should_be]),
-                        ));
-                    }
-                    sorted.push(name);
+        syn::Item::Enum(enum_variants) => {
+            if !enum_variants.variants.is_empty() {
+                let names: Vec<syn::Ident> = enum_variants
+                    .variants
+                    .iter()
+                    .map(|variant| variant.ident.clone())
+                    .collect();
+                if let Err(e) = lexicographic_sort(names, enum_variants.variants.len()) {
+                    return Err(e);
+                } else {
+                    return Ok(());
                 }
             }
             return Ok(());
@@ -51,17 +42,15 @@ fn sorted_impl<T, E>(input: &syn::Item) -> syn::Result<()> {
 
 #[proc_macro_attribute]
 pub fn check(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    //    LexicographicMatch.visit_item_fn_mut(&mut stream);
-
     let mut stream: syn::ItemFn = parse_macro_input!(item as syn::ItemFn);
     let mut lm = LexicographicMatch::default();
     lm.visit_item_fn_mut(&mut stream);
     let mut out = quote! { #stream };
-    out.extend(lm.errors.into_iter().map(|err| err.into_compile_error()));
+    out.extend(lm.errors.into_iter().map(|err| err.to_compile_error()));
     out.into()
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct LexicographicMatch {
     errors: Vec<syn::Error>,
 }
@@ -70,52 +59,51 @@ impl visit_mut::VisitMut for LexicographicMatch {
     fn visit_expr_match_mut(&mut self, node: &mut syn::ExprMatch) {
         if node.attrs.iter().any(|expr| expr.path().is_ident("sorted")) {
             node.attrs.retain(|expr| !expr.path().is_ident("sorted"));
-            let mut variant_names: Vec<String> = Vec::with_capacity(node.attrs.len());
+            let mut names = Vec::with_capacity(node.arms.len());
             for arm in node.arms.iter() {
-                let ident = get_arm_ident(&arm.pat).expect("Failed to get arm name in VisitMut.");
-                let name = ident.to_string();
-                if variant_names
-                    .last()
-                    .map(|last_item| &ident.to_string() < last_item)
-                    .unwrap_or(false)
-                {
-                    let should_be = variant_names
-                        .binary_search(&name)
-                        .expect_err("Failed to find binary search value in visit_expr_match_mut.");
-                    self.errors.push(syn::Error::new(
-                        ident.span(),
-                        format!("{} should sort before {}", name, variant_names[should_be]),
-                    ));
-                }
-                variant_names.push(name);
+                let path_segs =
+                    get_arm_lh(&arm.pat).expect("Expected path in visit_expr_match_mut.");
+                names.push(path_segs.clone());
             }
+            let _ = lexicographic_sort(names, node.arms.len())
+                .unwrap_or_else(|err| self.errors.push(err));
         }
         visit_mut::visit_expr_match_mut(self, node);
     }
 }
 
-fn get_arm_ident<'a>(arm: &'a syn::Pat) -> syn::Result<&'a syn::Ident> {
-    match arm {
-        syn::Pat::Ident(syn::PatIdent {
-            subpat: Some((_, ref sp)),
-            ..
-        }) => get_arm_ident(sp),
-        syn::Pat::Struct(pat_struct) => {
-            let ident = pat_struct
-                .path
-                .get_ident()
-                .expect("Failed to get ident from pattern in get_arm_ident.");
-            Ok(ident)
-        }
-        syn::Pat::TupleStruct(pat_tpl_struct) => {
-            let ident = pat_tpl_struct.path.get_ident().expect("");
-            Ok(ident)
-        }
-        _ => {
+fn lexicographic_sort(idents: Vec<syn::Ident>, len: usize) -> syn::Result<()> {
+    let mut sorted_list: Vec<_> = Vec::with_capacity(len);
+    for ident in idents {
+        let name = ident.to_string();
+        if sorted_list
+            .last()
+            .map(|last_item| &name < &last_item)
+            .unwrap_or(false)
+        {
+            let should_be = sorted_list
+                .binary_search(&name)
+                .expect_err("Expected binary search value in visit_expr_match_mut.");
+
             return Err(syn::Error::new(
-                Span::call_site(),
-                "Failed to find ident in arm pattern.",
-            ))
+                ident.span(),
+                format!(
+                    "{} should sort before {}",
+                    name.to_string(),
+                    sorted_list[should_be]
+                ),
+            ));
         }
+        sorted_list.push(name);
+    }
+    Ok(())
+}
+
+fn get_arm_lh<'a>(arm: &'a syn::Pat) -> Option<&syn::Ident> {
+    match arm {
+        syn::Pat::Struct(pat_struct) => Some(&pat_struct.path.segments[0].ident),
+        syn::Pat::TupleStruct(pat_tpl_struct) => Some(&pat_tpl_struct.path.segments[0].ident),
+        syn::Pat::Path(pat_path) => Some(&pat_path.path.segments[0].ident),
+        _ => None,
     }
 }
