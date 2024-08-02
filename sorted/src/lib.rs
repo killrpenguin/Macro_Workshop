@@ -20,12 +20,9 @@ fn sorted_impl<T, E>(input: &syn::Item) -> syn::Result<()> {
     match input {
         syn::Item::Enum(enum_variants) => {
             if !enum_variants.variants.is_empty() {
-                let names: Vec<syn::Ident> = enum_variants
-                    .variants
-                    .iter()
-                    .map(|variant| variant.ident.clone())
-                    .collect();
-                if let Err(e) = lexicographic_sort(names, enum_variants.variants.len()) {
+                let variant_paths: Vec<syn::Path> =
+                    collect_paths(enum_variants.variants.clone()).expect("");
+                if let Err(e) = lexicographic_sort(variant_paths, enum_variants.variants.len()) {
                     return Err(e);
                 } else {
                     return Ok(());
@@ -59,34 +56,34 @@ impl visit_mut::VisitMut for LexicographicMatch {
     fn visit_expr_match_mut(&mut self, node: &mut syn::ExprMatch) {
         if node.attrs.iter().any(|expr| expr.path().is_ident("sorted")) {
             node.attrs.retain(|expr| !expr.path().is_ident("sorted"));
-            let mut names = Vec::with_capacity(node.arms.len());
+            let mut paths = Vec::with_capacity(node.arms.len());
             for arm in node.arms.iter() {
                 let path_segs =
-                    get_arm_lh(&arm.pat).expect("Expected path in visit_expr_match_mut.");
-                names.push(path_segs.clone());
+                    &arm.clone().into_path().expect("Expected path in visit_expr_match_mut.");
+                paths.push(path_segs.clone());
             }
-            let _ = lexicographic_sort(names, node.arms.len())
+            let _ = lexicographic_sort(paths, node.arms.len())
                 .unwrap_or_else(|err| self.errors.push(err));
         }
         visit_mut::visit_expr_match_mut(self, node);
     }
 }
 
-fn lexicographic_sort(idents: Vec<syn::Ident>, len: usize) -> syn::Result<()> {
-    let mut sorted_list: Vec<_> = Vec::with_capacity(len);
-    for ident in idents {
-        let name = ident.to_string();
+fn lexicographic_sort(paths: Vec<syn::Path>, len: usize) -> syn::Result<()> {
+    let mut sorted_list: Vec<String> = Vec::with_capacity(len);
+    for path in paths {
+        let segment: &syn::PathSegment = path.segments.iter().next().unwrap();
+        let name = segment.ident.to_string();
         if sorted_list
             .last()
-            .map(|last_item| &name < &last_item)
+            .map(|last_item| &name < last_item)
             .unwrap_or(false)
         {
             let should_be = sorted_list
                 .binary_search(&name)
-                .expect_err("Expected binary search value in visit_expr_match_mut.");
-
-            return Err(syn::Error::new(
-                ident.span(),
+                .expect_err("Failed to find binary search value in lexico sort.");
+            return Err(syn::Error::new_spanned(
+                path,
                 format!(
                     "{} should sort before {}",
                     name.to_string(),
@@ -99,11 +96,39 @@ fn lexicographic_sort(idents: Vec<syn::Ident>, len: usize) -> syn::Result<()> {
     Ok(())
 }
 
-fn get_arm_lh<'a>(arm: &'a syn::Pat) -> Option<&syn::Ident> {
-    match arm {
-        syn::Pat::Struct(pat_struct) => Some(&pat_struct.path.segments[0].ident),
-        syn::Pat::TupleStruct(pat_tpl_struct) => Some(&pat_tpl_struct.path.segments[0].ident),
-        syn::Pat::Path(pat_path) => Some(&pat_path.path.segments[0].ident),
-        _ => None,
+fn collect_paths<I>(iter: I) -> syn::Result<Vec<syn::Path>>
+where
+    I: IntoIterator,
+    I::Item: IntoPath,
+{
+    iter.into_iter().map(IntoPath::into_path).collect()
+}
+
+trait IntoPath {
+    fn into_path(self) -> syn::Result<syn::Path>;
+}
+
+impl IntoPath for syn::Variant {
+    fn into_path(self) -> syn::Result<syn::Path> {
+        let mut segments = syn::punctuated::Punctuated::new();
+        segments.push_value(self.ident.into());
+        Ok(syn::Path {
+            leading_colon: None,
+            segments,
+        })
+    }
+}
+
+impl IntoPath for syn::Arm {
+    fn into_path(self) -> syn::Result<syn::Path> {
+        match self.pat {
+            syn::Pat::Path(pat_path) => Ok(pat_path.path),
+            syn::Pat::TupleStruct(tpl_pat) => Ok(tpl_pat.path),
+            syn::Pat::Struct(pat_struct) => Ok(pat_struct.path),
+            _ => Err(syn::Error::new(
+                Span::call_site(),
+                "Failed to find path for pattern in match expression.",
+            )),
+        }
     }
 }
