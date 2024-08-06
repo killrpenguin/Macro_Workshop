@@ -1,0 +1,143 @@
+extern crate proc_macro;
+
+use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
+use quote::quote;
+use syn::visit_mut::VisitMut;
+use syn::{parse_macro_input, visit_mut};
+
+#[derive(Default, Debug, Clone)]
+struct LexicographicMatch {
+    errors: Vec<syn::Error>,
+}
+
+#[proc_macro_attribute]
+pub fn sorted(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input_stream: syn::Item = parse_macro_input!(item as syn::Item);
+    let _ = lexicographic_enum(&input_stream);
+    quote! { #input_stream }.into()
+}
+
+fn lexicographic_enum(input: &syn::Item) -> syn::Result<()> {
+    if let syn::Item::Enum(enum_variants) = input {
+        if !enum_variants.variants.is_empty() {
+            let variant_paths: Vec<syn::Path> =
+                collect_paths(enum_variants.variants.clone()).expect("");
+            return Err(lexicographic_sort(variant_paths, enum_variants.variants.len())
+                .unwrap_err());
+        }
+    } else {
+        return Err(syn::Error::new_spanned(
+            input,
+            "expected enum or match expression",
+        ));
+    };
+    Ok(())
+}
+
+#[proc_macro_attribute]
+pub fn check(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let mut stream: syn::ItemFn = parse_macro_input!(item as syn::ItemFn);
+    let mut lm = LexicographicMatch::default();
+    lm.visit_item_fn_mut(&mut stream);
+    let mut out = quote! { #stream };
+    out.extend(
+        lm.errors
+            .into_iter()
+            .take(1)
+            .map(|err| err.to_compile_error()),
+   );
+    out.into()
+}
+
+impl visit_mut::VisitMut for LexicographicMatch {
+    fn visit_expr_match_mut(&mut self, node: &mut syn::ExprMatch) {
+        if node.attrs.iter().any(|expr| expr.path().is_ident("sorted")) {
+            node.attrs.retain(|expr| !expr.path().is_ident("sorted"));
+            let mut paths: Vec<syn::Path> = Vec::with_capacity(node.arms.len());
+            for arm in node.arms.iter() {
+                let path_segs: syn::Path =
+                    arm.clone().into_path().expect("Failed to unwrap path seg.");
+                paths.push(path_segs);
+            }
+            let _ = lexicographic_sort(paths, node.arms.len()).unwrap_or_else(|err| {
+                self.errors.push(err);
+            });
+        }
+        visit_mut::visit_expr_match_mut(self, node);
+    }
+}
+
+fn lexicographic_sort(paths: Vec<syn::Path>, len: usize) -> syn::Result<()> {
+    let mut sorted_list: Vec<String> = Vec::with_capacity(len);
+    for path in paths {
+        if !path.segments.is_empty() {
+            let name = full_path_name::<String>(&path);
+            if sorted_list
+                .last()
+                .map(|last_item| &name < last_item)
+                .unwrap_or(false)
+            {
+                let should_be = sorted_list
+                    .binary_search(&name)
+                    .expect_err("Failed to find binary search value in lexico sort.");
+
+                return Err(syn::Error::new_spanned(
+                    path,
+                    format!(
+                        "{} should sort before {}",
+                        name.to_string(),
+                        sorted_list[should_be]
+                    ),
+                ));
+            }
+            sorted_list.push(name);
+        }
+    }
+    Ok(())
+}
+
+fn full_path_name<T>(path: &syn::Path) -> String {
+    if path.segments.len() == 1 {
+        return path.segments[0].ident.to_string();
+    }
+    path.segments
+        .iter()
+        .map(|seg| format!("{}", quote! { #seg }))
+        .collect::<Vec<_>>()
+        .join("::")
+}
+
+fn collect_paths<I>(iter: I) -> syn::Result<Vec<syn::Path>>
+where
+    I: IntoIterator,
+    I::Item: IntoPath,
+{
+    iter.into_iter().map(IntoPath::into_path).collect()
+}
+
+trait IntoPath {
+    fn into_path(self) -> syn::Result<syn::Path>;
+}
+
+impl IntoPath for syn::Variant {
+    fn into_path(self) -> syn::Result<syn::Path> {
+        let mut segments = syn::punctuated::Punctuated::new();
+        segments.push_value(self.ident.into());
+        Ok(syn::Path {
+            leading_colon: None,
+            segments,
+        })
+    }
+}
+
+impl IntoPath for syn::Arm {
+    fn into_path(self) -> syn::Result<syn::Path> {
+        match self.pat {
+            syn::Pat::Path(pat_path) => Ok(pat_path.path),
+            syn::Pat::TupleStruct(tpl_pat) => Ok(tpl_pat.path),
+            syn::Pat::Struct(pat_struct) => Ok(pat_struct.path),
+            other => Err(syn::Error::new_spanned(other, "unsupported by #[sorted]")),
+        }
+    }
+}
