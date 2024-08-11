@@ -65,7 +65,7 @@ fn item_strategy<R>(
                 .expect("Failed to find match expression in item strat.");
             let pathes = collect_pathes(expr_match.arms.clone())?;
             data.visit_item_fn_mut(val);
-            let sort_error = lexicographic_sort(&pathes, pathes.len()).err();
+q            let sort_error = lexicographic_sort(&pathes, pathes.len()).err();
             if let Some(error) = sort_error {
                 let comp_error = error.to_compile_error();
                 return Ok(quote! { #val #comp_error});

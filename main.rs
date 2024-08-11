@@ -21,5 +21,3 @@ impl Display for Error {
 }
 
 fn main() {}
-
-
