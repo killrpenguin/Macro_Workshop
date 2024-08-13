@@ -54,38 +54,6 @@ fn impl_fmt_debug(data_type_ident: syn::Ident, named_fields: &syn::punctuated::P
     })
 }
 
-// fn impl_fmt_debug(stream: &syn::DeriveInput) -> syn::Result<TokenStream2> {
-//     let data_type_ident = &stream.ident;
-//     let data_type_name = &stream.ident.to_string();
-//     let named_fields = match &stream.data {
-//         syn::Data::Struct(syn::DataStruct { fields, .. }) => {
-//             if let syn::Fields::Named(syn::FieldsNamed { named, .. }) = fields {
-//                 named
-//             } else {
-//                 return Err(syn_error(fields, "Invalid field.").err().unwrap());
-//             }
-//         }
-//         syn::Data::Enum(syn::DataEnum { variants, .. }) => unimplemented!(),
-//         syn::Data::Union(syn::DataUnion { fields, .. }) => unimplemented!(),
-//     };
-//     let field_ident = named_fields.iter().map(|val| {
-//         let name = val.ident.as_ref().unwrap();
-//         name
-//     });
-//     let field_name = named_fields.iter().map(|val| {
-//         let name = val.ident.as_ref().unwrap().to_string();
-//         name
-//     });
-//     Ok(quote! {
-//         use std::fmt;
-//         impl std::fmt::Debug for #data_type_ident {
-//             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-//                 f.debug_struct(#data_type_name)#(.field(#field_name, &self.#field_ident))*.finish()
-//             }
-//         }
-//     })
-// }
-
 fn syn_error(tokens: impl ToTokens, msg: impl std::fmt::Display) -> syn::Result<()> {
     Err(syn::Error::new_spanned(tokens, msg))
 }

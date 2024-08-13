@@ -1,23 +1,20 @@
-use sorted::sorted;
+use derive_debug::CustomDebug;
 
-use std::fmt::{self, Display};
-use std::io;
-
-#[sorted]
-pub enum Error {
-    Fmt(fmt::Error),
-    Io(io::Error),
+#[derive(CustomDebug)]
+pub struct Field {
+    name: &'static str,
+    #[debug = "0b{:08b}"]
+    bitmask: u8,
 }
 
-impl Display for Error {
-    #[sorted::check]
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        #[sorted]
-        match self {
-            Error::Io(e) => write!(f, "{}", e),
-            Error::Fmt(e) => write!(f, "{}", e),
-        }
-    }
-}
+fn main() {
+    let f = Field {
+        name: "F",
+        bitmask: 0b00011100,
+    };
 
-fn main() {}
+    let debug = format!("{:?}", f);
+    let expected = r#"Field { name: "F", bitmask: 0b00011100 }"#;
+
+    assert_eq!(debug, expected);
+}
