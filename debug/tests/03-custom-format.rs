@@ -42,7 +42,7 @@ fn main() {
     assert_eq!(debug, expected);
 }
 
-
+// Initial output of failed test:
 // assertion `left == right` failed
 //   left: "Field { name: \"F\", bitmask: 28 }"
 //  right: "Field { name: \"F\", bitmask: 0b00011100 }"
