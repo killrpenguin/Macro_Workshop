@@ -229,6 +229,30 @@ impl IntoPathSeg for syn::Ident {
     }
 }
 
+trait CompareIdents {
+    fn compare_idents(&self, ident: &syn::Ident) -> bool;
+}
+
+impl CompareIdents for syn::Path {
+    fn compare_idents(&self, ident: &syn::Ident) -> bool {
+        self.segments.iter().any(|seg| seg.ident == *ident)
+    }
+}
+
+impl CompareIdents for syn::Type {
+    fn compare_idents(&self, ident: &syn::Ident) -> bool {
+        if let syn::Type::Path(syn::TypePath { path, .. }) = self {
+            if path.is_ident(ident) {
+                true
+            } else {
+                path.bracketed_generic(ident)
+            }
+        } else {
+            false
+        }
+    }
+}
+
 trait GetPathes {
     fn get_type_path(&self) -> Option<&syn::TypePath>;
     fn get_path(&self) -> Option<&syn::Path>;
@@ -296,30 +320,6 @@ impl RecursePathSeg for syn::PathSegment {
                 .expect("Failed to unwrap path in get_gen_arg_path().")
         } else {
             panic!()
-        }
-    }
-}
-
-trait CompareIdents {
-    fn compare_idents(&self, ident: &syn::Ident) -> bool;
-}
-
-impl CompareIdents for syn::Path {
-    fn compare_idents(&self, ident: &syn::Ident) -> bool {
-        self.segments.iter().any(|seg| seg.ident == *ident)
-    }
-}
-
-impl CompareIdents for syn::Type {
-    fn compare_idents(&self, ident: &syn::Ident) -> bool {
-        if let syn::Type::Path(syn::TypePath { path, .. }) = self {
-            if path.is_ident(ident) {
-                true
-            } else {
-                path.bracketed_generic(ident)
-            }
-        } else {
-            false
         }
     }
 }

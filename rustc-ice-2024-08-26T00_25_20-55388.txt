@@ -1,0 +1,109 @@
+thread 'rustc' panicked at /rustc/3f5fd8dd41153bc5fdca9427e9e05be2c767ba23/compiler/rustc_errors/src/diagnostic.rs:992:9:
+Span must not be empty and have no suggestion
+stack backtrace:
+   0:     0x7f57a33c9035 - <unknown>
+   1:     0x7f57a33c8f85 - std::backtrace::Backtrace::force_capture::he16f908fb9b318ab
+   2:     0x7f57a5337fe4 - <unknown>
+   3:     0x7f57a33e4993 - std::panicking::rust_panic_with_hook::h213385de97f04cb9
+   4:     0x7f57a33e46cb - <unknown>
+   5:     0x7f57a33e1c59 - <unknown>
+   6:     0x7f57a33e4487 - rust_begin_unwind
+   7:     0x7f57a339b923 - core::panicking::panic_fmt::h231305301f9adbc4
+   8:     0x7f57a7aaa177 - <unknown>
+   9:     0x7f57a7afaeb1 - <unknown>
+  10:     0x7f57a7af941e - <unknown>
+  11:     0x7f57a7af2894 - <unknown>
+  12:     0x7f57a7b135ad - <rustc_infer[49076d8a9a99c6a6]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[aab5ff8e84cf48e7]::traits::error_reporting::type_err_ctxt_ext::InferCtxtPrivExt>::note_obligation_cause
+  13:     0x7f57a7b091dd - <rustc_infer[49076d8a9a99c6a6]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[aab5ff8e84cf48e7]::traits::error_reporting::type_err_ctxt_ext::TypeErrCtxtExt>::report_selection_error
+  14:     0x7f57a7b190cb - <rustc_infer[49076d8a9a99c6a6]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[aab5ff8e84cf48e7]::traits::error_reporting::type_err_ctxt_ext::InferCtxtPrivExt>::report_fulfillment_error
+  15:     0x7f57a7b06cb3 - <rustc_infer[49076d8a9a99c6a6]::infer::error_reporting::TypeErrCtxt as rustc_trait_selection[aab5ff8e84cf48e7]::traits::error_reporting::type_err_ctxt_ext::TypeErrCtxtExt>::report_fulfillment_errors
+  16:     0x7f57a5945022 - <unknown>
+  17:     0x7f57a5c01865 - rustc_hir_typeck[82d5bb7ed2a46180]::typeck
+  18:     0x7f57a7127c33 - <unknown>
+  19:     0x7f57a72a6aa3 - <unknown>
+  20:     0x7f57a70ace4e - <unknown>
+  21:     0x7f57a73b1460 - <unknown>
+  22:     0x7f57a589dbb2 - <unknown>
+  23:     0x7f57a5785f59 - <unknown>
+  24:     0x7f57a561957e - rustc_hir_analysis[6486adf4d17cedde]::check_crate
+  25:     0x7f57a5f31a4f - rustc_interface[5d5af8a3f358c7c6]::passes::analysis
+  26:     0x7f57a71281e1 - <unknown>
+  27:     0x7f57a73eb78f - <unknown>
+  28:     0x7f57a7043569 - <unknown>
+  29:     0x7f57a7375a18 - <unknown>
+  30:     0x7f57a53204fb - <unknown>
+  31:     0x7f57a52f507c - <unknown>
+  32:     0x7f57a52e3cd7 - <unknown>
+  33:     0x7f57a52f34d8 - <unknown>
+  34:     0x7f57a5355642 - <unknown>
+  35:     0x7f57a52efaaa - <unknown>
+  36:     0x7f57a33f0174 - <unknown>
+  37:     0x7f57a31f1608 - <unknown>
+  38:     0x7f57a3274ccc - <unknown>
+  39:                0x0 - <unknown>
+
+
+rustc version: 1.80.1-nightly (3f5fd8dd4 2024-08-06) (gentoo)
+platform: x86_64-unknown-linux-gnu
+
+query stack during panic:
+#0 [typeck] type-checking `debug_bound`
+#1 [analysis] running analysis passes on this crate
+end of query stack
+delayed bug: TyKind::Error constructed but no error reported
+   0: <unknown>
+   1: <rustc_errors::DiagCtxt>::emit_diagnostic
+   2: <unknown>
+   3: <unknown>
+   4: <unknown>
+   5: <unknown>
+   6: <unknown>
+   7: <rustc_infer::infer::error_reporting::TypeErrCtxt as rustc_trait_selection::traits::error_reporting::type_err_ctxt_ext::InferCtxtPrivExt>::note_obligation_cause
+   8: <rustc_infer::infer::error_reporting::TypeErrCtxt as rustc_trait_selection::traits::error_reporting::type_err_ctxt_ext::TypeErrCtxtExt>::report_selection_error
+   9: <rustc_infer::infer::error_reporting::TypeErrCtxt as rustc_trait_selection::traits::error_reporting::type_err_ctxt_ext::InferCtxtPrivExt>::report_fulfillment_error
+  10: <rustc_infer::infer::error_reporting::TypeErrCtxt as rustc_trait_selection::traits::error_reporting::type_err_ctxt_ext::TypeErrCtxtExt>::report_fulfillment_errors
+  11: <unknown>
+  12: rustc_hir_typeck::typeck
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: rustc_hir_analysis::check_crate
+  20: rustc_interface::passes::analysis
+  21: <unknown>
+  22: <unknown>
+  23: <unknown>
+  24: <unknown>
+  25: <unknown>
+  26: <unknown>
+  27: <unknown>
+  28: <unknown>
+  29: <unknown>
+  30: <unknown>
+  31: <unknown>
+  32: <unknown>
+  33: <unknown>
+
+thread 'rustc' panicked at library/core/src/panicking.rs:227:5:
+panic in a destructor during cleanup
+stack backtrace:
+   0:     0x7f57a33c9035 - <unknown>
+   1:     0x7f57a33c8f85 - std::backtrace::Backtrace::force_capture::he16f908fb9b318ab
+   2:     0x7f57a5337fe4 - <unknown>
+   3:     0x7f57a33e4993 - std::panicking::rust_panic_with_hook::h213385de97f04cb9
+   4:     0x7f57a33e46cb - <unknown>
+   5:     0x7f57a33e1c59 - <unknown>
+   6:     0x7f57a33e4487 - rust_begin_unwind
+   7:     0x7f57a339b980 - core::panicking::panic_nounwind_fmt::h65c82fcaa2606d4c
+   8:     0x7f57a339ba65 - core::panicking::panic_nounwind_nobacktrace::hed434f2629590394
+   9:     0x7f57a339bc56 - core::panicking::panic_in_cleanup::h20cf8f516a0c9177
+  10:     0x7f57a52e4c4c - <unknown>
+  11:     0x7f57a52f34d8 - <unknown>
+  12:     0x7f57a5355642 - <unknown>
+  13:     0x7f57a52efaaa - <unknown>
+  14:     0x7f57a33f0174 - <unknown>
+  15:     0x7f57a31f1608 - <unknown>
+  16:     0x7f57a3274ccc - <unknown>
+  17:                0x0 - <unknown>
