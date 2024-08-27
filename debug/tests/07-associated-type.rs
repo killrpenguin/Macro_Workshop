@@ -43,3 +43,51 @@ fn main() {
 
     assert_debug::<Field<Id>>();
 }
+
+// Generics for Field struct:
+
+// generics: Generics {
+//         lt_token: Some(
+//             Lt,
+//         ),
+//         params: [
+//             GenericParam::Type(
+//                 TypeParam {
+//                     attrs: [],
+//                     ident: Ident {
+//                         ident: "T",
+//                         span: #0 bytes(130..131),
+//                     },
+//                     colon_token: Some(
+//                         Colon,
+//                     ),
+//                     bounds: [
+//                         TypeParamBound::Trait(
+//                             TraitBound {
+//                                 paren_token: None,
+//                                 modifier: TraitBoundModifier::None,
+//                                 lifetimes: None,
+//                                 path: Path {
+//                                     leading_colon: None,
+//                                     segments: [
+//                                         PathSegment {
+//                                             ident: Ident {
+//                                                 ident: "Trait",
+//                                                 span: #0 bytes(133..138),
+//                                             },
+//                                             arguments: PathArguments::None,
+//                                         },
+//                                     ],
+//                                 },
+//                             },
+//                         ),
+//                     ],
+//                     eq_token: None,
+//                     default: None,
+//                 },
+//             ),
+//         ],
+//         gt_token: Some(
+//             Gt,
+//         ),
+//         where_clause: None,

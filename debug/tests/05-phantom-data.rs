@@ -71,3 +71,29 @@ fn main() {
     assert_debug::<PhantomData<NotDebug>>();
     assert_debug::<Field<NotDebug>>();
 }
+
+
+// generics: Generics {
+//     lt_token: Some(
+//         Lt,
+//     ),
+//     params: [
+//         GenericParam::Type(
+//             TypeParam {
+//                 attrs: [],
+//                 ident: Ident {
+//                     ident: "T",
+//                     span: #0 bytes(141..142),
+//                 },
+//                 colon_token: None,
+//                 bounds: [],
+//                 eq_token: None,
+//                 default: None,
+//             },
+//         ),
+//     ],
+//     gt_token: Some(
+//         Gt,
+//     ),
+//     where_clause: None,
+// },

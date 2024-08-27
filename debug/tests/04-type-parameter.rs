@@ -38,3 +38,27 @@ fn main() {
 
     assert_eq!(debug, expected);
 }
+
+// generics: Generics {
+//     lt_token: Some(
+//         Lt,
+//     ),
+//     params: [
+//         GenericParam::Type(
+//             TypeParam {
+//                 attrs: [],
+//                 ident: Ident {
+//                     ident: "T",
+//                     span: #0 bytes(72..73),
+//                 },
+//                 colon_token: None,
+//                 bounds: [],
+//                 eq_token: None,
+//                 default: None,
+//             },
+//         ),
+//     ],
+//     gt_token: Some(
+//         Gt,
+//     ),
+//     where_clause: None,

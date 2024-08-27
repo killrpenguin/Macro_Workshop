@@ -9,6 +9,8 @@ use syn::{visit_mut::VisitMut, AngleBracketedGenericArguments, Generics};
 #[proc_macro_derive(CustomDebug, attributes(debug))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let mut token_stream = syn::parse_macro_input!(input as syn::DeriveInput);
+    //    println!("{:#?}", &token_stream);
+
     let derived_ident = &token_stream.ident;
     if !token_stream.attrs.is_empty() {
         debug_bound(&token_stream.attrs);
@@ -39,7 +41,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
         let generic_field = named_fields
             .iter()
             .find_map(|field| {
-                if field.ty.is_given_generic(generic_ident) {
+                if field.ty.compare_idents(generic_ident) {
                     Some(field)
                 } else {
                     None
@@ -58,7 +60,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
         quote::quote! { impl std::fmt::Debug for #derived_ident }
     };
 
-    let debug_impl = build_debug_func(derived_ident, named_fields);
+    let debug_impl = build_debug_function(derived_ident, named_fields);
 
     quote::quote! {
         #impl_line
@@ -67,7 +69,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
     .into()
 }
 
-fn build_debug_func(
+fn build_debug_function(
     derived_ident: &syn::Ident,
     named_fields: &syn::punctuated::Punctuated<syn::Field, syn::token::Comma>,
 ) -> TokenStream2 {
@@ -76,7 +78,7 @@ fn build_debug_func(
     let field_args = named_fields.iter().map(|field| {
         let field_ident = field.ident.as_ref().expect("failed to unwrap field ident.");
         let field_name = field_ident.to_string();
-        let brac = debug_attr_macro(field);
+        let brac = debug_innert_attr(field);
         if !field.attrs.is_empty() && brac.is_some() {
             return quote::quote! { #field_name, &format_args!(#brac, self.#field_ident)  };
         } else {
@@ -92,7 +94,7 @@ fn build_debug_func(
     }
 }
 
-fn debug_attr_macro(field: &syn::Field) -> Option<String> {
+fn debug_innert_attr(field: &syn::Field) -> Option<String> {
     if !field.attrs.is_empty() {
         field
             .attrs
@@ -150,6 +152,7 @@ fn debug_bound(attrs: &[syn::Attribute]) -> std::string::String {
             }
         })
         .expect("Expected proc_macro2::TokenTree::Literal. Found None.");
+
     r_val
         .as_str()
         .strip_suffix(": Debug")
@@ -157,12 +160,30 @@ fn debug_bound(attrs: &[syn::Attribute]) -> std::string::String {
         .to_string()
 }
 
-trait IntoTraitBoundPath {
-    fn into_traitbound_path(self) -> syn::Path;
+trait IntoPath {
+    fn into_path(self) -> syn::Path;
 }
 
-impl IntoTraitBoundPath for TokenStream2 {
-    fn into_traitbound_path(self) -> syn::Path {
+impl IntoPath for std::string::String {
+    fn into_path(self) -> syn::Path {
+        let str_segments = self.rsplit("::");
+        let mut segments = syn::punctuated::Punctuated::new();
+        for seg in str_segments {
+            segments.push_value(seg.to_string().into_path_seg());
+            segments.push_punct(syn::token::PathSep::default());
+        }
+        if segments.trailing_punct() {
+            segments.pop();
+        }
+        syn::Path {
+            leading_colon: None,
+            segments,
+        }
+    }
+}
+
+impl IntoPath for TokenStream2 {
+    fn into_path(self) -> syn::Path {
         let segs: syn::punctuated::Punctuated<syn::PathSegment, syn::token::PathSep> =
             syn::punctuated::Punctuated::new();
 
@@ -190,6 +211,15 @@ trait IntoPathSeg {
     fn into_path_seg(self) -> syn::PathSegment;
 }
 
+impl IntoPathSeg for std::string::String {
+    fn into_path_seg(self) -> syn::PathSegment {
+        syn::PathSegment {
+            ident: syn::Ident::new(&self, proc_macro2::Span::call_site()),
+            arguments: syn::PathArguments::None,
+        }
+    }
+}
+
 impl IntoPathSeg for syn::Ident {
     fn into_path_seg(self) -> syn::PathSegment {
         syn::PathSegment {
@@ -199,12 +229,12 @@ impl IntoPathSeg for syn::Ident {
     }
 }
 
-trait GetPath {
+trait GetPathes {
     fn get_type_path(&self) -> Option<&syn::TypePath>;
     fn get_path(&self) -> Option<&syn::Path>;
 }
 
-impl GetPath for syn::AngleBracketedGenericArguments {
+impl GetPathes for syn::AngleBracketedGenericArguments {
     fn get_path(&self) -> Option<&syn::Path> {
         return self.args.iter().find_map(|arg| {
             if let syn::GenericArgument::Type(syn::Type::Path(type_path)) = arg {
@@ -270,16 +300,36 @@ impl RecursePathSeg for syn::PathSegment {
     }
 }
 
+trait CompareIdents {
+    fn compare_idents(&self, ident: &syn::Ident) -> bool;
+}
+
+impl CompareIdents for syn::Path {
+    fn compare_idents(&self, ident: &syn::Ident) -> bool {
+        self.segments.iter().any(|seg| seg.ident == *ident)
+    }
+}
+
+impl CompareIdents for syn::Type {
+    fn compare_idents(&self, ident: &syn::Ident) -> bool {
+        if let syn::Type::Path(syn::TypePath { path, .. }) = self {
+            if path.is_ident(ident) {
+                true
+            } else {
+                path.bracketed_generic(ident)
+            }
+        } else {
+            false
+        }
+    }
+}
+
 trait PathHelpers {
-    fn is_generic_ident(&self, ident: &syn::Ident) -> bool;
     fn bracketed_generic(&self, ident: &syn::Ident) -> bool;
     fn is_bracketed(&self) -> bool;
 }
 
 impl PathHelpers for syn::Path {
-    fn is_generic_ident(&self, ident: &syn::Ident) -> bool {
-        self.segments.iter().any(|seg| seg.ident == *ident)
-    }
     fn bracketed_generic(&self, ident: &syn::Ident) -> bool {
         self.segments.iter().any(|seg| match &seg.arguments {
             syn::PathArguments::AngleBracketed(AngleBracketedGenericArguments {
@@ -287,7 +337,7 @@ impl PathHelpers for syn::Path {
             }) => args.iter().any(|arg| {
                 let new_seg = seg.find_inner();
                 let path = new_seg.get_gen_arg_path();
-                path.is_generic_ident(ident)
+                path.compare_idents(ident)
             }),
             _ => false,
         })
@@ -300,25 +350,12 @@ impl PathHelpers for syn::Path {
 }
 
 trait GenericsTypeFieldHelpers {
-    fn is_given_generic(&self, generic_ident: &syn::Ident) -> bool;
     fn is_named_ident(&self, name: &str) -> bool;
     fn into_where_predicate(&self, generic_ident: &syn::Ident) -> syn::WherePredicate;
     fn get_inner_path(&self) -> Option<&syn::TypePath>;
 }
 
 impl GenericsTypeFieldHelpers for syn::Type {
-    fn is_given_generic(&self, generic_ident: &syn::Ident) -> bool {
-        if let syn::Type::Path(syn::TypePath { path, .. }) = self {
-            if path.is_ident(generic_ident) {
-                true
-            } else {
-                path.bracketed_generic(generic_ident)
-            }
-        } else {
-            false
-        }
-    }
-
     fn is_named_ident(&self, name: &str) -> bool {
         if let syn::Type::Path(syn::TypePath { path, .. }) = self {
             path.segments
@@ -331,7 +368,7 @@ impl GenericsTypeFieldHelpers for syn::Type {
 
     fn into_where_predicate(&self, generic_ident: &syn::Ident) -> syn::WherePredicate {
         let mut bounds = syn::punctuated::Punctuated::new();
-        let r_val_path = quote::quote! { std::fmt::Debug }.into_traitbound_path();
+        let r_val_path = quote::quote! { std::fmt::Debug }.into_path();
         let type_param_bound = syn::TypeParamBound::Trait(syn::TraitBound {
             paren_token: None,
             modifier: syn::TraitBoundModifier::None,

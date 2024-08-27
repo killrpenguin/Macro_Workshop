@@ -95,3 +95,27 @@ fn main() {
     assert_debug::<One<u8>>();
     assert_debug::<Two<u8>>();
 }
+
+// generics: Generics {
+//     lt_token: Some(
+//         Lt,
+//     ),
+//     params: [
+//         GenericParam::Type(
+//             TypeParam {
+//                 attrs: [],
+//                 ident: Ident {
+//                     ident: "T",
+//                     span: #0 bytes(91..92),
+//                 },
+//                 colon_token: None,
+//                 bounds: [],
+//                 eq_token: None,
+//                 default: None,
+//             },
+//         ),
+//     ],
+//     gt_token: Some(
+//         Gt,
+//     ),
+//     where_clause: None,
